@@ -414,6 +414,7 @@ std::enable_if_t<std::is_same<T,CppAD::AD<scalar>>::value,std::pair<typename Ste
     options += "String line_search_method cg-penalty\n";
     options += "Numeric acceptable_dual_inf_tol 1.0e-7\n";
     options += "Numeric dual_inf_tol 1.0e-10\n";
+    options += "Numeric alpha_red_factor 0.1\n";
 
     // place to return solution
     CppAD::ipopt::solve_result<std::vector<scalar>> result_max;

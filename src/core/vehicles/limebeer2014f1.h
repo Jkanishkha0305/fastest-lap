@@ -212,7 +212,7 @@ class limebeer2014f1
 
             constraints[11] = this->get_chassis().get_brake()*this->get_chassis().get_rear_axle().get_throttle();
 
-            constraints *= 2.0e2;
+            constraints *= 1.0e2;
         
             constraints[12] = this->get_chassis().get_front_axle().template get_tire<0>().get_lambda()/lambda_max_fl;
             constraints[13] = this->get_chassis().get_front_axle().template get_tire<1>().get_lambda()/lambda_max_fr;
