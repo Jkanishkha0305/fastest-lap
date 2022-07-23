@@ -198,7 +198,7 @@ std::enable_if_t<std::is_same<T,CppAD::AD<scalar>>::value,typename Steady_state<
     Max_lat_acc f(_car,v);
 
     bool success = false;
-    for (size_t attempt = 0; attempt < 6; ++attempt)
+    for (size_t attempt = 0; attempt < 8; ++attempt)
     {
         CppAD::ipopt::solve<std::vector<scalar>, Max_lat_acc>(options, x0, x_lb, x_ub, c_lb, c_ub, f, solution);
 
