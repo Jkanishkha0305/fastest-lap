@@ -419,7 +419,7 @@ std::enable_if_t<std::is_same<T,CppAD::AD<scalar>>::value,std::pair<typename Ste
     // solve the problem
     Max_lon_acc f_max(_car,v,ay/Dynamic_model_t::acceleration_units);
     bool success = false;
-    for (size_t attempt = 0; attempt < 6; ++attempt)
+    for (size_t attempt = 0; attempt < 8; ++attempt)
     {
         CppAD::ipopt::solve<std::vector<scalar>, Max_lon_acc>(options, x0, x_lb, x_ub, c_lb, c_ub, f_max, result_max);
 
@@ -718,7 +718,7 @@ std::enable_if_t<std::is_same<T,CppAD::AD<scalar>>::value,
 
     Solution result_ss_ay = result_0g;
 
-    for (size_t i = 0; i < n_points; ++i)
+    for (size_t i = 0; i < n_points-1; ++i)
     {
         out(2).progress_bar("g-g diagram computation: ", i, n_points);
         auto result_ss_ay_candidate = solve(v,result_max_lat_acc.ax*ay_gg[i]/result_max_lat_acc.ay, ay_gg[i], 1, true, x0_ss_ay, false);
@@ -735,7 +735,7 @@ std::enable_if_t<std::is_same<T,CppAD::AD<scalar>>::value,
 
         auto [x_lb, x_ub] = Dynamic_model_t::steady_state_variable_bounds_accelerate();
         x_lb.push_back(result_max_lat_acc.ax/Dynamic_model_t::acceleration_units-0.5/Dynamic_model_t::acceleration_units);
-        x_ub.push_back(result_max_lon_acc.ax/Dynamic_model_t::acceleration_units+0.5/Dynamic_model_t::acceleration_units);
+        x_ub.push_back(result_max_lon_acc.ax/Dynamic_model_t::acceleration_units+0.1/Dynamic_model_t::acceleration_units);
 
         auto [c_lb, c_ub] = Dynamic_model_t::steady_state_constraint_bounds();
 
@@ -747,9 +747,8 @@ std::enable_if_t<std::is_same<T,CppAD::AD<scalar>>::value,
         options += "Numeric tol          1e-8\n";
         options += "Numeric constr_viol_tol  1e-8\n";
         options += "Numeric acceptable_tol  1e-6\n";
-        options += "String expect_infeasible_problem yes\n";
-        options += "Numeric mumps_pivtol 1.0e-4\n";
-        options += "String start_with_resto yes\n";
+//      options += "String expect_infeasible_problem yes\n";
+//      options += "Numeric mumps_pivtol 1.0e-4\n";
 
         // place to return solution
         CppAD::ipopt::solve_result<std::vector<scalar>> result_max;
@@ -894,6 +893,10 @@ std::enable_if_t<std::is_same<T,CppAD::AD<scalar>>::value,
 
         std::vector<scalar> x0_ss_ay = _car.get_x(result_ss_ay.q, result_ss_ay.qa, result_ss_ay.u, v);
     }
+
+    // Add the last point corresponding to the maximum lateral acceleration 
+    solution_max.back() = result_max_lat_acc;
+    solution_min.back() = result_max_lat_acc;
 
     out(2).stop_progress_bar();
 
