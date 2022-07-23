@@ -73,6 +73,7 @@ std::enable_if_t<std::is_same<T,CppAD::AD<scalar>>::value,typename Steady_state<
     std::string options;
     // turn off any printing
     options += "Integer print_level  0\n";
+    options += "Sparse true forward\n";
     options += "String  sb           yes\n";
     options += "Numeric tol          1e-8\n";
     options += "Numeric constr_viol_tol  1e-8\n";
@@ -186,6 +187,7 @@ std::enable_if_t<std::is_same<T,CppAD::AD<scalar>>::value,typename Steady_state<
     std::string options;
     // turn off any printing
     options += "Integer print_level  0\n";
+    options += "Sparse true forward\n";
     options += "String  sb           yes\n";
     options += "Numeric tol          1e-8\n";
     options += "Numeric constr_viol_tol  1e-8\n";
@@ -411,11 +413,11 @@ std::enable_if_t<std::is_same<T,CppAD::AD<scalar>>::value,std::pair<typename Ste
     options += "Numeric tol          1e-8\n";
     options += "Numeric constr_viol_tol  1e-8\n";
     options += "Numeric acceptable_tol  1e-6\n";
+    options += "Integer max_iter 5000\n";
     options += "String line_search_method cg-penalty\n";
     options += "Numeric acceptable_dual_inf_tol 1.0e-7\n";
     options += "Numeric dual_inf_tol 1.0e-10\n";
-    options += "Numeric alpha_red_factor 0.1\n";
-
+    options += "Sparse true forward\n";
     // place to return solution
     CppAD::ipopt::solve_result<std::vector<scalar>> result_max;
 
@@ -481,6 +483,7 @@ std::enable_if_t<std::is_same<T,CppAD::AD<scalar>>::value,std::pair<typename Ste
     if ( result_max.status != CppAD::ipopt::solve_result<std::vector<scalar>>::success )
     {
         std::cout << "Ipopt was not successful" << std::endl;
+        std::cout << result_max.status << std::endl;
         const auto& x = result_max.x;
 
         std::cout << std::setprecision(16);
@@ -572,6 +575,7 @@ std::enable_if_t<std::is_same<T,CppAD::AD<scalar>>::value,std::pair<typename Ste
     if ( result_min.status != CppAD::ipopt::solve_result<std::vector<scalar>>::success )
     {
         std::cout << "Ipopt was not successful" << std::endl;
+        std::cout << result_min.status << std::endl;
         const auto& x = result_min.x;
 
         std::cout << std::setprecision(16);
@@ -747,6 +751,7 @@ std::enable_if_t<std::is_same<T,CppAD::AD<scalar>>::value,
         std::string options;
         // turn off any printing
         options += "Integer print_level  0\n";
+        options += "Sparse true forward\n";
         options += "String  sb           yes\n";
         options += "Numeric tol          1e-8\n";
         options += "Numeric constr_viol_tol  1e-8\n";
