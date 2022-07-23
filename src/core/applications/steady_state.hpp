@@ -734,8 +734,8 @@ std::enable_if_t<std::is_same<T,CppAD::AD<scalar>>::value,
         x0.push_back(result_ss_ay.ax/Dynamic_model_t::acceleration_units);
 
         auto [x_lb, x_ub] = Dynamic_model_t::steady_state_variable_bounds_accelerate();
-        x_lb.push_back(result_max_lat_acc.ax/Dynamic_model_t::acceleration_units-0.1/Dynamic_model_t::acceleration_units);
-        x_ub.push_back(result_max_lon_acc.ax/Dynamic_model_t::acceleration_units+0.1/Dynamic_model_t::acceleration_units);
+        x_lb.push_back(result_max_lat_acc.ax/Dynamic_model_t::acceleration_units-0.5/Dynamic_model_t::acceleration_units);
+        x_ub.push_back(result_max_lon_acc.ax/Dynamic_model_t::acceleration_units+0.5/Dynamic_model_t::acceleration_units);
 
         auto [c_lb, c_ub] = Dynamic_model_t::steady_state_constraint_bounds();
 
@@ -749,6 +749,7 @@ std::enable_if_t<std::is_same<T,CppAD::AD<scalar>>::value,
         options += "Numeric acceptable_tol  1e-6\n";
         options += "String expect_infeasible_problem yes\n";
         options += "Numeric mumps_pivtol 1.0e-4\n";
+        options += "String start_with_resto yes\n";
 
         // place to return solution
         CppAD::ipopt::solve_result<std::vector<scalar>> result_max;
@@ -760,7 +761,7 @@ std::enable_if_t<std::is_same<T,CppAD::AD<scalar>>::value,
         Max_lon_acc_constraints c(_car,v,ay_gg[i]/Dynamic_model_t::acceleration_units);
         typename Max_lon_acc_constraints::argument_type x_max;
         std::copy(result_max.x.cbegin(), result_max.x.cend(), x_max.begin());
-        c(x_max);
+        const auto constraints_max = c(x_max);
         std::array<Timeseries_t,Dynamic_model_t::NSTATE> q_max = c.get_q();
         std::array<Timeseries_t,Dynamic_model_t::NALGEBRAIC> qa_max = c.get_qa();
         std::array<Timeseries_t,Dynamic_model_t::NCONTROL> u_max = c.get_u();
@@ -791,14 +792,32 @@ std::enable_if_t<std::is_same<T,CppAD::AD<scalar>>::value,
         {
             dqdt_max_sc[i] = Value(dqdt_max[i]);
         }
+
+        if ( result_max.status != CppAD::ipopt::solve_result<std::vector<scalar>>::success )
+        {
+            std::cout << "Ipopt was not successful" << std::endl;
+            std::cout << "Error code: " << result_max.status << std::endl;
+            const auto& x = result_max.x;
+    
+            std::cout << std::setprecision(16);
+            for (size_t i = 0; i < x.size(); ++i)
+            {
+                std::cout << x_lb[i] << " < x[" << i << "]: " << x[i] << " < " << x_ub[i] << std::endl;
+            }
+            for (size_t i = 0; i < constraints_max.size(); ++i)
+            {
+                std::cout << c_lb[i] << " < c[" << i << "]: " << constraints_max[i] << " < " << c_ub[i] << std::endl;
+            }
+    
+        }
     
         const bool max_solved = result_max.status == CppAD::ipopt::solve_result<std::vector<scalar>>::success;
         solution_max[i] = {max_solved, v, Value(result_max.x[Dynamic_model_t::N_SS_VARS])*Dynamic_model_t::acceleration_units, ay_gg[i], q_max_sc, qa_max_sc, u_max_sc, dqdt_max_sc};
 
         // Solve minimum acceleration
         std::tie(x_lb, x_ub) = Dynamic_model_t::steady_state_variable_bounds_brake();
-        x_lb.push_back(result_min_lon_acc.ax/Dynamic_model_t::acceleration_units-0.1/Dynamic_model_t::acceleration_units);
-        x_ub.push_back(result_max_lat_acc.ax/Dynamic_model_t::acceleration_units+0.1/Dynamic_model_t::acceleration_units);
+        x_lb.push_back(result_min_lon_acc.ax/Dynamic_model_t::acceleration_units-0.5/Dynamic_model_t::acceleration_units);
+        x_ub.push_back(result_max_lat_acc.ax/Dynamic_model_t::acceleration_units+0.5/Dynamic_model_t::acceleration_units);
 
         // place to return solution
         CppAD::ipopt::solve_result<std::vector<scalar>> result_min;
