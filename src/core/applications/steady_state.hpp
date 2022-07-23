@@ -412,8 +412,8 @@ std::enable_if_t<std::is_same<T,CppAD::AD<scalar>>::value,std::pair<typename Ste
     options += "Numeric constr_viol_tol  1e-8\n";
     options += "Numeric acceptable_tol  1e-6\n";
     options += "String line_search_method cg-penalty\n";
-    options += "Numeric acceptable_dual_inf_tol 1.0e-6\n";
-    options += "Numeric dual_inf_tol 1.0e-8\n";
+    options += "Numeric acceptable_dual_inf_tol 1.0e-7\n";
+    options += "Numeric dual_inf_tol 1.0e-10\n";
 
     // place to return solution
     CppAD::ipopt::solve_result<std::vector<scalar>> result_max;
@@ -584,6 +584,7 @@ std::enable_if_t<std::is_same<T,CppAD::AD<scalar>>::value,std::pair<typename Ste
         }
 
     }
+
 
     const bool min_solved = result_min.status == CppAD::ipopt::solve_result<std::vector<scalar>>::success;
     Solution solution_min = {min_solved, v, Value(result_min.x[Dynamic_model_t::N_SS_VARS])*Dynamic_model_t::acceleration_units, ay, q_min_sc, qa_min_sc, u_min_sc, dqdt_min_sc};

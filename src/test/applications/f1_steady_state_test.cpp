@@ -339,7 +339,7 @@ TEST_F(Steady_state_test_f1, max_longitudinal_acceleration_several_speeds)
     double ax_previous = 0.0;
     std::vector<double> ax_min(n), kappa_min_acc_fl(n), kappa_min_acc_fr(n), kappa_min_acc_rl(n), kappa_min_acc_rr(n), psi_min_acc(n), delta_min_acc(n);
     std::vector<double> ax_max(n), kappa_max_acc_fl(n), kappa_max_acc_fr(n), kappa_max_acc_rl(n), kappa_max_acc_rr(n), psi_max_acc(n), delta_max_acc(n);
-    for (size_t i = 0; i < n; ++i)
+    for (size_t i = 0; i < n ; ++i)
     {
         const scalar v = 100.0*KMH + 200.0*KMH*i/(n-1);
         Steady_state ss(car);
