@@ -11,7 +11,6 @@
     <front-axle model="axle-car"> 
         <track units="m"> 1.46 </track>
         <inertia units="kg.m2"> 1.00 </inertia>   <!-- (*) -->
-        <smooth_throttle_coeff> 1.0e-5 </smooth_throttle_coeff>
         <brakes>
             <max_torque units="N.m">5000.0</max_torque>
         </brakes>
@@ -20,7 +19,6 @@
     <rear-axle>
         <track units="m"> 1.46 </track>
         <inertia units="kg.m2"> 1.55 </inertia>   <!-- (*) -->
-        <smooth_throttle_coeff> 1.0e-5 </smooth_throttle_coeff>
         <differential_stiffness units="N.m.s/rad"> 10.47 </differential_stiffness>
         <brakes>
             <max_torque units="N.m">5000.0</max_torque>
@@ -72,7 +70,6 @@
         <brake_bias> 0.6 </brake_bias>
         <roll_balance_coefficient> 0.5 </roll_balance_coefficient>
         <Fz_max_ref2> 1.0 </Fz_max_ref2>
-        <maximum_throttle> 1.0 </maximum_throttle>
     </chassis>
 
     <front-tire model="tire-pacejka-simple" type="normal">

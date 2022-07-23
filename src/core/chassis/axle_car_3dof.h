@@ -43,7 +43,7 @@ struct POWERED
     //! Control variables: none
     enum Controls 
     { 
-        CONTROL_END = CONTROL0 
+        ITHROTTLE = CONTROL0, CONTROL_END
     } ;
     
     constexpr static size_t IIDKAPPA_LEFT  = IKAPPA_LEFT;    //! Left tire longitudinal slip time derivative [1/s]
@@ -135,15 +135,18 @@ class Axle_car_3dof : public Axle<Timeseries_t,std::tuple<Tire_left_t,Tire_right
     //! Updates the axle: compute dkappa_left and dkappa_right, plus the equivalent force+torque at the axle center
     //! @param[in] Fz_left: the normal force of the left tire
     //! @param[in] Fz_right: the normal force of the right tire
-    //! @param[in] throttle: the throttle/brake percentage in [-1,1]
+    //! @param[in] brake: the brake/brake percentage in [-1,1]
     //! @param[in] brake_bias: the brake bias in [0,1]
-    void update(Timeseries_t Fz_left, Timeseries_t Fz_right, Timeseries_t throttle, Timeseries_t brake_bias);
+    void update(Timeseries_t Fz_left, Timeseries_t Fz_right, Timeseries_t brake, Timeseries_t brake_bias);
 
     //! Get the track
     const scalar& get_track() const { return _track; }
 
     //! Get the steering angle [rad]
     const Timeseries_t& get_steering_angle() const { return _delta; }
+
+    //! Get the throttle [-]
+    const Timeseries_t& get_throttle() const { return _throttle; }
 
     //! Get the angular speed of the left tire [rad/s]
     const Timeseries_t& get_kappa_left() const { return _kappa_left; }
@@ -237,9 +240,6 @@ class Axle_car_3dof : public Axle<Timeseries_t,std::tuple<Tire_left_t,Tire_right
     scalar _I;                          //! [c] Inertia
     Timeseries_t _differential_stiffness;     //! [c] Differential stiffness [N.m.s/rad]
 
-    // Numerical
-    scalar _throttle_smooth_pos;        //! [c] Coefficient used to smooth throttle/brake
-
     // State Variables
     Timeseries_t _kappa_left;           //! [in] Angular speed of the left tire [rad/s]
     Timeseries_t _kappa_right;          //! [in] Angular speed of the right tire [rad/s]
@@ -253,12 +253,13 @@ class Axle_car_3dof : public Axle<Timeseries_t,std::tuple<Tire_left_t,Tire_right
     Timeseries_t _torque_right;         //! [out] Torque applied to the right tire
 
     // Control variables
-    Timeseries_t _throttle;             //! [in] Throttle/brake value in [-1/1]
+    Timeseries_t _brake;             //! [in] Brake percentage in [0,1]
 
     // Actuators
     Brake<Timeseries_t>  _brakes;       //! [c] Brakes model
 
     // Extra members for POWERED
+    Timeseries_t         _throttle;     //! [in] Throttle percentage in [0,1]
     Engine<Timeseries_t> _engine;       //! [c] Engine model
 
     // Extra members for STEERING
@@ -270,7 +271,6 @@ class Axle_car_3dof : public Axle<Timeseries_t,std::tuple<Tire_left_t,Tire_right
     { 
         { "track", _track },
         { "inertia", _I },
-        { "smooth_throttle_coeff", _throttle_smooth_pos },
         { "differential_stiffness", _differential_stiffness }
     };}
 
@@ -280,7 +280,6 @@ class Axle_car_3dof : public Axle<Timeseries_t,std::tuple<Tire_left_t,Tire_right
     { 
         { "track", _track },
         { "inertia", _I },
-        { "smooth_throttle_coeff", _throttle_smooth_pos },
         { "differential_stiffness", _differential_stiffness }
     };}
 
@@ -290,7 +289,6 @@ class Axle_car_3dof : public Axle<Timeseries_t,std::tuple<Tire_left_t,Tire_right
     { 
         { "track", _track },
         { "inertia", _I },
-        { "smooth_throttle_coeff", _throttle_smooth_pos }
     };}
 
     template<typename T = Axle_mode<0,0>>
@@ -299,7 +297,6 @@ class Axle_car_3dof : public Axle<Timeseries_t,std::tuple<Tire_left_t,Tire_right
     { 
         { "track", _track },
         { "inertia", _I },
-        { "smooth_throttle_coeff", _throttle_smooth_pos }
     };}
 
     std::vector<bool> __used_parameters = std::vector<bool>(get_parameters().size(), false);

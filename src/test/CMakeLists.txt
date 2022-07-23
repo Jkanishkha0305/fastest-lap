@@ -4,7 +4,8 @@ macro(new_test)
     
     set(BINARY ${binary_name}_test)
     
-    file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false *.h *.cpp ../main.cpp)
+    #file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false *.h *.cpp ../main.cpp)
+    file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false *.h f1_steady_state_test.cpp steady_state_test.cpp ../main.cpp)
     
     set(SOURCES ${TEST_SOURCES})
 
@@ -16,8 +17,8 @@ macro(new_test)
     target_link_libraries(${BINARY} LINK_PRIVATE GTest::gtest lion::lion)
 
     if (NOT MSYS)
-        target_link_libraries(${BINARY} LINK_PRIVATE fastestlapc)
-	target_compile_definitions(${BINARY} PRIVATE TEST_LIBFASTESTLAPC)
+    #    target_link_libraries(${BINARY} LINK_PRIVATE fastestlapc)
+	#target_compile_definitions(${BINARY} PRIVATE TEST_LIBFASTESTLAPC)
     endif()
     
     # Copy required files

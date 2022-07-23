@@ -12,15 +12,15 @@ Axle_car_3dof<Timeseries_t,Tire_left_t,Tire_right_t,Axle_mode,STATE0,CONTROL0>::
   _y_tire({0.0,0.0}),
   _I(0.0),
   _differential_stiffness(0.0),
-  _throttle_smooth_pos(0.0),
   _kappa_left(0.0),
   _kappa_right(0.0),
   _dkappa_left(0.0),
   _dkappa_right(0.0),
   _torque_left(0.0),
   _torque_right(0.0),
-  _throttle(0.0),
+  _brake(0.0),
   _brakes(),
+  _throttle(0.0),
   _engine(),
   _delta(0.0)
 {
@@ -65,15 +65,15 @@ Axle_car_3dof<Timeseries_t,Tire_left_t,Tire_right_t,Axle_mode,STATE0,CONTROL0>::
   _y_tire({0.0,0.0}),
   _I(0.0),
   _differential_stiffness(0.0),
-  _throttle_smooth_pos(0.0),
   _kappa_left(0.0),
   _kappa_right(0.0),
   _dkappa_left(0.0),
   _dkappa_right(0.0),
   _torque_left(0.0),
   _torque_right(0.0),
-  _throttle(0.0),
+  _brake(0.0),
   _brakes(),
+  _throttle(0.0),
   _engine(),
   _delta(0.0)
 {
@@ -182,8 +182,10 @@ inline void Axle_car_3dof<Timeseries_t,Tire_left_t,Tire_right_t,Axle_mode,STATE0
 
 template<typename Timeseries_t, typename Tire_left_t, typename Tire_right_t, template<size_t,size_t> typename Axle_mode, size_t STATE0, size_t CONTROL0>
 void Axle_car_3dof<Timeseries_t,Tire_left_t,Tire_right_t,Axle_mode,STATE0,CONTROL0>::update
-    (Timeseries_t Fz_left, Timeseries_t Fz_right, Timeseries_t throttle, Timeseries_t brake_bias)
+    (Timeseries_t Fz_left, Timeseries_t Fz_right, Timeseries_t brake, Timeseries_t brake_bias)
 {
+    _brake = brake;
+
     // Create aliases
     Tire_left_t& tire_l  = std::get<LEFT>(base_type::_tires);
     Tire_right_t& tire_r = std::get<RIGHT>(base_type::_tires);
@@ -195,19 +197,13 @@ void Axle_car_3dof<Timeseries_t,Tire_left_t,Tire_right_t,Axle_mode,STATE0,CONTRO
     const Timeseries_t& omega_left = tire_l.get_omega();
     const Timeseries_t& omega_right = tire_r.get_omega();
 
-    // Compute brake percentage
-    const Timeseries_t brake_percentage     =  smooth_pos(-throttle,_throttle_smooth_pos);
-
     // Compute the braking torque
-    _torque_left  = -smooth_sign(omega_left,1.0)*_brakes(brake_percentage)*brake_bias;
-    _torque_right = -smooth_sign(omega_right,1.0)*_brakes(brake_percentage)*brake_bias;
+    _torque_left  = -smooth_sign(omega_left,1.0)*_brakes(_brake)*brake_bias;
+    _torque_right = -smooth_sign(omega_right,1.0)*_brakes(_brake)*brake_bias;
 
     if constexpr (std::is_same<Axle_mode<0,0>, POWERED<0,0>>::value)
     {
-        // Compute throttle percentage 
-        const Timeseries_t throttle_percentage  =  smooth_pos( throttle,_throttle_smooth_pos);
-
-        const Timeseries_t engine_torque = _engine(throttle_percentage, 0.5*(omega_left + omega_right));
+        const Timeseries_t engine_torque = _engine(_throttle, 0.5*(omega_left + omega_right));
         const Timeseries_t differential_torque = _differential_stiffness*(omega_left - omega_right);
         _torque_left  += 0.5*engine_torque - differential_torque;
         _torque_right += 0.5*engine_torque + differential_torque;
@@ -272,6 +268,12 @@ void Axle_car_3dof<Timeseries_t,Tire_left_t,Tire_right_t,Axle_mode,STATE0,CONTRO
         // steering angle
         u[Axle_type::ISTEERING] = base_type::_name + ".steering-angle";
     }
+
+    if constexpr (std::is_same<Axle_mode<0,0>,POWERED<0,0>>::value)
+    {
+        // steering angle
+        u[Axle_type::ITHROTTLE] = base_type::_name + ".throttle";
+    }
 }
 
 
@@ -295,6 +297,12 @@ void Axle_car_3dof<Timeseries_t,Tire_left_t,Tire_right_t,Axle_mode,STATE0,CONTRO
         // rotate the tires' frames
         std::get<LEFT>(base_type::_tires).get_frame().set_rotation_angle(0,_delta);
         std::get<RIGHT>(base_type::_tires).get_frame().set_rotation_angle(0,_delta);
+    }
+
+    if constexpr (std::is_same<Axle_mode<0,0>,POWERED<0,0>>::value)
+    {
+        // throttle
+        _throttle = u[Axle_type::ITHROTTLE];
     }
 }
 
@@ -324,6 +332,13 @@ void Axle_car_3dof<Timeseries_t,Tire_left_t,Tire_right_t,Axle_mode,STATE0,CONTRO
         u_def[Axle_type::ISTEERING] = 0.0;
         u_lb[Axle_type::ISTEERING] = -20.0*DEG;
         u_ub[Axle_type::ISTEERING] =  20.0*DEG;
+    }
+
+    if constexpr (std::is_same_v<Axle_mode<0,0>,POWERED<0,0>>)
+    {
+        u_def[Axle_type::ITHROTTLE] = 0.0;
+        u_lb[Axle_type::ITHROTTLE] = 0.0;
+        u_ub[Axle_type::ITHROTTLE] = 1.0;
     }
 }
 

@@ -44,60 +44,93 @@ class limebeer2014f1
         Dynamic_model(Xml_document& database, const Road_t& road = Road_t()) : Dynamic_model_t(database,road) {}
 
         // Steady-state computation
-        static constexpr const size_t N_SS_VARS = 11;
-        static constexpr const size_t N_SS_EQNS = 14;
+        static constexpr const size_t N_SS_VARS = 12;
+        static constexpr const size_t N_SS_EQNS = 16;
 
         // Factor to scale the acceleration on the fitness function
-        static constexpr const scalar acceleration_scaling = g0;
+        static constexpr const scalar acceleration_units = g0;
+
+        static constexpr const scalar maximum_yaw = 10.0*DEG;
+        static constexpr const scalar maximum_steering = 10.0*DEG;
 
         // The content of x is: x = [kappa_fl, kappa_fr, kappa_rl, kappa_rr, psi, Fz_fl, Fz_fr, Fz_rl, Fz_rr, delta, throttle]
         static std::vector<scalar> steady_state_initial_guess()
         {
-            return {0.0, 0.0, 0.0, 0.0, 0.0, -0.25, -0.25, -0.25, -0.25, 0.0, 0.0};
+            return {0.0, 0.0, 0.0, 0.0, 0.0, -0.25, -0.25, -0.25, -0.25, 0.0, 0.0, 0.0};
         }
 
+/*
         static std::pair<std::vector<scalar>,std::vector<scalar>> steady_state_variable_bounds() 
         {
-            return { { -0.085, -0.085, -0.085, -0.085, -10.0*DEG, -3.0, -3.0, -3.0, -3.0, -10.0*DEG, -1.0},
-                     {  0.085,  0.085,  0.085,  0.085,  10.0*DEG,  1.0,  1.0,  1.0,  1.0,  10.0*DEG,  1.0} };
+            return { { -0.085, -0.085, -0.085, -0.085, -1.0e-2*DEG, -3.0, -3.0, -3.0, -3.0, -4.0*DEG, 0.0, 0.0},
+                     {  0.085,  0.085,  0.085,  0.085,  20.0*DEG,  1.0,  1.0,  1.0,  1.0,  20.0*DEG, 1.0, 1.0} };
         }
 
         static std::pair<std::vector<scalar>,std::vector<scalar>> steady_state_variable_bounds_accelerate() 
         {
-            return { { -0.04, -0.04, -0.08, -0.08, -10.0*DEG, -3.0, -3.0, -3.0, -3.0, -10.0*DEG, -0.1},
-                     {  0.04,  0.04,  0.085,  0.085,  10.0*DEG,  1.0,  1.0,  1.0,  1.0,  10.0*DEG,  1.0} };
+            return steady_state_variable_bounds();
         }
 
         static std::pair<std::vector<scalar>,std::vector<scalar>> steady_state_variable_bounds_brake() 
         {
-            return { { -0.170, -0.170, -0.170, -0.170, -1.0e-2*DEG, -3.0, -3.0, -3.0, -3.0, -4.0*DEG, -1.0},
-                     {  0.04,  0.04,  0.04,  0.04,  10.0*DEG,  1.0,  1.0,  1.0,  1.0,  10.0*DEG,  0.5} };
+            return steady_state_variable_bounds();
+        }
+*/
+
+         static std::pair<std::vector<scalar>,std::vector<scalar>> steady_state_variable_bounds() 
+         {
+            return { { -1.15, -1.15, -1.15, -1.15, -1.0, -2.0, -2.0, -2.0, -2.0, 0.0e-1, 0.0, 0.0},
+                     {  0.25,  0.25,  1.00,  1.00,  1.5,     0.1,  0.1,  0.1,  0.1,  1.5, 1.0, 1.0} };
+        }
+
+        static std::pair<std::vector<scalar>,std::vector<scalar>> steady_state_variable_bounds_accelerate() 
+        {
+            return steady_state_variable_bounds();
+        }
+
+        static std::pair<std::vector<scalar>,std::vector<scalar>> steady_state_variable_bounds_brake() 
+        {
+            //return steady_state_variable_bounds();
+            return { { -1.15, -1.15, -1.30, -1.30, -0.5, -2.0, -2.0, -2.0, -2.0, 0.0e-1, 0.0, 0.0},
+                     {  0.25,  0.25,  0.25,  0.25,  1.0,  0.1,  0.1,  0.1,  0.1,  1.0, 0.5, 1.0} };
+        }
+
+
+        static std::vector<bool> steady_state_get_extendable_bounds()
+        {
+            return { true, true, true, true, false, false, false, false, false, false, false, false };
         }
 
 
         static std::pair<std::vector<scalar>,std::vector<scalar>> steady_state_constraint_bounds() 
         {
-            return { {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.090, -0.090, -0.090, -0.090},
-                     {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  0.090,  0.090,  0.090,  0.090} };
+            return { {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,-100.0e-2, -100.0e-2, -100.0e-2, -100.0e-2},
+                     {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  1.2e0,  1.2e0,  1.2e0,  1.2e0}};
         }
 
-        template<typename T>
-        static std::vector<T> get_x(const std::array<T,Dynamic_model_t::NSTATE>& q,
-                                         const std::array<T,Dynamic_model_t::NALGEBRAIC>& qa,
-                                         const std::array<T,Dynamic_model_t::NCONTROL>& u,
-                                         scalar v) 
+        std::vector<scalar> get_x(const std::array<scalar,Dynamic_model_t::NSTATE>& q,
+                                         const std::array<scalar,Dynamic_model_t::NALGEBRAIC>& qa,
+                                         const std::array<scalar,Dynamic_model_t::NCONTROL>& u,
+                                         scalar v) const
         {
-            return { q[Dynamic_model_t::Chassis_type::front_axle_type::IKAPPA_LEFT],
-                     q[Dynamic_model_t::Chassis_type::front_axle_type::IKAPPA_RIGHT],
-                     q[Dynamic_model_t::Chassis_type::rear_axle_type::IKAPPA_LEFT],
-                     q[Dynamic_model_t::Chassis_type::rear_axle_type::IKAPPA_RIGHT],
-                     q[Dynamic_model_t::Road_type::IPSI],
+            const auto& m = this->get_chassis().get_mass();
+            const auto kappa_max_fl = this->get_chassis().get_front_axle().template get_tire<0>().get_model().maximum_kappa(-qa[Dynamic_model_t::Chassis_type::IFZFL]*m*g0);
+            const auto kappa_max_fr = this->get_chassis().get_front_axle().template get_tire<1>().get_model().maximum_kappa(-qa[Dynamic_model_t::Chassis_type::IFZFR]*m*g0);
+            const auto kappa_max_rl = this->get_chassis().get_rear_axle().template get_tire<0>().get_model().maximum_kappa(-qa[Dynamic_model_t::Chassis_type::IFZRL]*m*g0);
+            const auto kappa_max_rr = this->get_chassis().get_rear_axle().template get_tire<1>().get_model().maximum_kappa(-qa[Dynamic_model_t::Chassis_type::IFZRR]*m*g0);
+
+            return { q[Dynamic_model_t::Chassis_type::front_axle_type::IKAPPA_LEFT]/Value(kappa_max_fl),
+                     q[Dynamic_model_t::Chassis_type::front_axle_type::IKAPPA_RIGHT]/Value(kappa_max_fr),
+                     q[Dynamic_model_t::Chassis_type::rear_axle_type::IKAPPA_LEFT]/Value(kappa_max_rl),
+                     q[Dynamic_model_t::Chassis_type::rear_axle_type::IKAPPA_RIGHT]/Value(kappa_max_rr),
+                     q[Dynamic_model_t::Road_type::IPSI]/maximum_yaw,
                      qa[Dynamic_model_t::Chassis_type::IFZFL],
                      qa[Dynamic_model_t::Chassis_type::IFZFR],
                      qa[Dynamic_model_t::Chassis_type::IFZRL],
                      qa[Dynamic_model_t::Chassis_type::IFZRR],
-                     u[Dynamic_model_t::Chassis_type::front_axle_type::ISTEERING],
-                     u[Dynamic_model_t::Chassis_type::ITHROTTLE]
+                     u[Dynamic_model_t::Chassis_type::front_axle_type::ISTEERING]/maximum_steering,
+                     u[Dynamic_model_t::Chassis_type::rear_axle_type::ITHROTTLE],
+                     u[Dynamic_model_t::Chassis_type::IBRAKE],
                     };
         }
 
@@ -111,22 +144,10 @@ class limebeer2014f1
                                    const Timeseries_t& v)
         {
             // The content of x is: x = [kappa_fl, kappa_fr, kappa_rl, kappa_rr, psi, Fz_fl, Fz_fr, Fz_rl, Fz_rr, delta, throttle]
+
             // Construct state and controls
-            const Timeseries_t& psi = x[4];
-            const Timeseries_t omega = ay/v;
-             
-            // Construct the state
-            std::array<Timeseries_t,Dynamic_model_t::NSTATE> q;
-            q[Dynamic_model_t::Chassis_type::front_axle_type::IKAPPA_LEFT]  = x[0];
-            q[Dynamic_model_t::Chassis_type::front_axle_type::IKAPPA_RIGHT] = x[1];
-            q[Dynamic_model_t::Chassis_type::rear_axle_type::IKAPPA_LEFT]   = x[2];
-            q[Dynamic_model_t::Chassis_type::rear_axle_type::IKAPPA_RIGHT]  = x[3];
-            q[Dynamic_model_t::Chassis_type::IU]                            = v*cos(psi);
-            q[Dynamic_model_t::Chassis_type::IV]                            = -v*sin(psi);
-            q[Dynamic_model_t::Chassis_type::IOMEGA]                        = omega;
-            q[Dynamic_model_t::Road_type::IX]                               = 0.0;
-            q[Dynamic_model_t::Road_type::IY]                               = 0.0;
-            q[Dynamic_model_t::Road_type::IPSI]                             = x[4];
+            const Timeseries_t& psi = maximum_yaw*x[4];
+            const Timeseries_t omega = (ay*acceleration_units)/v;
 
             // Constract the algebraic variables
             std::array<Timeseries_t,Dynamic_model_t::NALGEBRAIC> qa;
@@ -134,19 +155,43 @@ class limebeer2014f1
             qa[Dynamic_model_t::Chassis_type::IFZFR] = x[6];
             qa[Dynamic_model_t::Chassis_type::IFZRL] = x[7];
             qa[Dynamic_model_t::Chassis_type::IFZRR] = x[8];
-        
+
+            const auto& m = this->get_chassis().get_mass();
+            const auto kappa_max_fl = this->get_chassis().get_front_axle().template get_tire<0>().get_model().maximum_kappa(-qa[Dynamic_model_t::Chassis_type::IFZFL]*m*g0);
+            const auto kappa_max_fr = this->get_chassis().get_front_axle().template get_tire<1>().get_model().maximum_kappa(-qa[Dynamic_model_t::Chassis_type::IFZFR]*m*g0);
+            const auto kappa_max_rl = this->get_chassis().get_rear_axle().template get_tire<0>().get_model().maximum_kappa(-qa[Dynamic_model_t::Chassis_type::IFZRL]*m*g0);
+            const auto kappa_max_rr = this->get_chassis().get_rear_axle().template get_tire<1>().get_model().maximum_kappa(-qa[Dynamic_model_t::Chassis_type::IFZRR]*m*g0);
+             
+            const auto lambda_max_fl = this->get_chassis().get_front_axle().template get_tire<0>().get_model().maximum_lambda(-qa[Dynamic_model_t::Chassis_type::IFZFL]*m*g0);
+            const auto lambda_max_fr = this->get_chassis().get_front_axle().template get_tire<1>().get_model().maximum_lambda(-qa[Dynamic_model_t::Chassis_type::IFZFR]*m*g0);
+            const auto lambda_max_rl = this->get_chassis().get_rear_axle().template get_tire<0>().get_model().maximum_lambda(-qa[Dynamic_model_t::Chassis_type::IFZRL]*m*g0);
+            const auto lambda_max_rr = this->get_chassis().get_rear_axle().template get_tire<1>().get_model().maximum_lambda(-qa[Dynamic_model_t::Chassis_type::IFZRR]*m*g0);
+
+            // Construct the state
+            std::array<Timeseries_t,Dynamic_model_t::NSTATE> q;
+            q[Dynamic_model_t::Chassis_type::front_axle_type::IKAPPA_LEFT]  = x[0]*kappa_max_fl;
+            q[Dynamic_model_t::Chassis_type::front_axle_type::IKAPPA_RIGHT] = x[1]*kappa_max_fr;
+            q[Dynamic_model_t::Chassis_type::rear_axle_type::IKAPPA_LEFT]   = x[2]*kappa_max_rl;
+            q[Dynamic_model_t::Chassis_type::rear_axle_type::IKAPPA_RIGHT]  = x[3]*kappa_max_rr;
+            q[Dynamic_model_t::Chassis_type::IU]                            = v*cos(psi);
+            q[Dynamic_model_t::Chassis_type::IV]                            = -v*sin(psi);
+            q[Dynamic_model_t::Chassis_type::IOMEGA]                        = omega;
+            q[Dynamic_model_t::Road_type::IX]                               = 0.0;
+            q[Dynamic_model_t::Road_type::IY]                               = 0.0;
+            q[Dynamic_model_t::Road_type::IPSI]                             = psi;
+
             // Construct the controls
             std::array<scalar,Dynamic_model_t::NCONTROL> u_def = this->get_state_and_control_upper_lower_and_default_values().u_def;
             std::array<Timeseries_t,Dynamic_model_t::NCONTROL> u;
             std::copy(u_def.cbegin(), u_def.cend(), u.begin());
     
-            u[Dynamic_model_t::Chassis_type::front_axle_type::ISTEERING] = x[9];
-            u[Dynamic_model_t::Chassis_type::ITHROTTLE]    = x[10];
+            u[Dynamic_model_t::Chassis_type::front_axle_type::ISTEERING] = x[9]*maximum_steering;
+            u[Dynamic_model_t::Chassis_type::rear_axle_type::ITHROTTLE]  = x[10];
+            u[Dynamic_model_t::Chassis_type::IBRAKE]                     = x[11];
         
             // Compute time derivative
             auto [dqdt,dqa] = (*this)(q,qa,u,0.0);
-        
-            // Compute constraints
+
             std::array<Timeseries_t,N_SS_EQNS> constraints;
         
             constraints[0] = dqa[0];
@@ -154,25 +199,33 @@ class limebeer2014f1
             constraints[2] = dqa[2];
             constraints[3] = dqa[3];
             constraints[4] = (dqdt[Dynamic_model_t::Chassis_type::IIDU]*sin(psi)
-                            + dqdt[Dynamic_model_t::Chassis_type::IIDV]*cos(psi))/g0;
-            constraints[5] = (ax - dqdt[Dynamic_model_t::Chassis_type::IIDU]*cos(psi)
-                                 + dqdt[Dynamic_model_t::Chassis_type::IIDV]*sin(psi))/g0;
+                            + dqdt[Dynamic_model_t::Chassis_type::IIDV]*cos(psi))/(g0);
+            constraints[5] = ax*acceleration_units/g0 + (- dqdt[Dynamic_model_t::Chassis_type::IIDU]*cos(psi)
+                                 + dqdt[Dynamic_model_t::Chassis_type::IIDV]*sin(psi))/(g0);
 
-            constraints[6] = this->get_chassis().get_front_axle().get_kappa_left_derivative()/9.81*660.0;
-            constraints[7] = this->get_chassis().get_front_axle().get_kappa_right_derivative()/9.81*660.0;
-            constraints[8] = this->get_chassis().get_rear_axle().get_kappa_left_derivative()/9.81*660.0;
-            constraints[9] = this->get_chassis().get_rear_axle().get_kappa_right_derivative()/9.81*660.0;
+            constraints[6] = dqdt[Dynamic_model_t::Chassis_type::IIDOMEGA]/g0;
+
+            constraints[7] = this->get_chassis().get_front_axle().get_kappa_left_derivative()/(g0*m)*v/0.33;
+            constraints[8] = this->get_chassis().get_front_axle().get_kappa_right_derivative()/(g0*m)*v/0.33;
+            constraints[9] = this->get_chassis().get_rear_axle().get_kappa_left_derivative()/(g0*m)*v/0.33;
+            constraints[10] = this->get_chassis().get_rear_axle().get_kappa_right_derivative()/(g0*m)*v/0.33;
+
+            constraints[11] = this->get_chassis().get_brake()*this->get_chassis().get_rear_axle().get_throttle();
+
+            constraints *= 1.0e2;
         
-            constraints[10] = this->get_chassis().get_front_axle().template get_tire<0>().get_lambda();
-            constraints[11] = this->get_chassis().get_front_axle().template get_tire<1>().get_lambda();
-            constraints[12] = this->get_chassis().get_rear_axle().template get_tire<0>().get_lambda();
-            constraints[13] = this->get_chassis().get_rear_axle().template get_tire<1>().get_lambda();
+            constraints[12] = this->get_chassis().get_front_axle().template get_tire<0>().get_lambda()/lambda_max_fl;
+            constraints[13] = this->get_chassis().get_front_axle().template get_tire<1>().get_lambda()/lambda_max_fr;
+            constraints[14] = this->get_chassis().get_rear_axle().template get_tire<0>().get_lambda()/lambda_max_rl;
+            constraints[15] = this->get_chassis().get_rear_axle().template get_tire<1>().get_lambda()/lambda_max_rr;
+
+
 
             return {constraints,q,qa,u};
         }
 
         // Optimal lap-time --------------------------------------------------------
-        static constexpr const size_t N_OL_EXTRA_CONSTRAINTS = 6;    //! The number of tire constraints: lambda_fl, lambda_fr, lambda_rl, lambda_rr
+        static constexpr const size_t N_OL_EXTRA_CONSTRAINTS = 7;    //! The number of tire constraints: lambda_fl, lambda_fr, lambda_rl, lambda_rr
                                                                      //! + the real track limits: -wL < n + sign(n).t.cos(alpha) < wR
 
         std::tuple<std::vector<scalar>,std::vector<scalar>> optimal_laptime_derivative_control_bounds() const
@@ -186,8 +239,8 @@ class limebeer2014f1
             const auto wr = this->get_road().get_right_track_limit(s);
             return 
             {
-                {-0.11,-0.11,-0.11,-0.11,-wl,-wl},
-                {0.11,0.11,0.11,0.11,wr,wr}
+                {0.0,-0.11,-0.11,-0.11,-0.11,-wl,-wl},
+                {0.0,0.11,0.11,0.11,0.11,wr,wr}
             };
         }
 
@@ -199,6 +252,7 @@ class limebeer2014f1
     
             return 
             {
+                this->get_chassis().get_brake()*this->get_chassis().get_rear_axle().get_throttle(),
                 this->get_chassis().get_front_axle().template get_tire<0>().get_lambda(),
                 this->get_chassis().get_front_axle().template get_tire<1>().get_lambda(),
                 this->get_chassis().get_rear_axle().template get_tire<0>().get_lambda(),

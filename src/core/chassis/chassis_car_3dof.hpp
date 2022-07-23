@@ -155,8 +155,8 @@ inline void Chassis_car_3dof<Timeseries_t,FrontAxle_t,RearAxle_t,STATE0,CONTROL0
     _neg_Fz_rr = -smooth_pos(-_Fz_rr, _Fz_max_ref2);
 
     // Update axles
-    base_type::get_front_axle().update(_neg_Fz_fl, _neg_Fz_fr, _throttle, _brake_bias);
-    base_type::get_rear_axle().update(_neg_Fz_rl, _neg_Fz_rr, _throttle, 1.0-_brake_bias);
+    base_type::get_front_axle().update(_neg_Fz_fl, _neg_Fz_fr, _brake, _brake_bias);
+    base_type::get_rear_axle().update(_neg_Fz_rl, _neg_Fz_rr, _brake, 1.0-_brake_bias);
 
     // Get the forces from the axles
     const Vector3d<Timeseries_t> x_front = std::get<0>(front_axle.get_frame().get_position_and_velocity_in_target(road_frame));
@@ -245,8 +245,8 @@ void Chassis_car_3dof<Timeseries_t,FrontAxle_t,RearAxle_t,STATE0,CONTROL0>::set_
 
     // Controls ---
 
-    // throttle
-    u[ITHROTTLE] = base_type::get_name() + ".throttle";
+    // brake
+    u[IBRAKE] = base_type::get_name() + ".brake";
 
     // brake bias
     u[IBRAKE_BIAS] = base_type::get_name() + ".brake-bias";
@@ -264,8 +264,8 @@ void Chassis_car_3dof<Timeseries_t,FrontAxle_t,RearAxle_t,STATE0,CONTROL0>::set_
 
     // Controls ---
 
-    // throttle
-    _throttle = u[ITHROTTLE];
+    // brake
+    _brake = u[IBRAKE];
 
     // brake bias
     _brake_bias = u[IBRAKE_BIAS];
@@ -301,10 +301,10 @@ void Chassis_car_3dof<Timeseries_t,FrontAxle_t,RearAxle_t,STATE0,CONTROL0>::set_
 
     // Controls ---
 
-    // throttle
-    u_def[ITHROTTLE] = 0.0;
-    u_lb[ITHROTTLE]  = -1.0;
-    u_ub[ITHROTTLE]  = _maximum_throttle;
+    // brake
+    u_def[IBRAKE] = 0.0;
+    u_lb[IBRAKE]  = 0.0;
+    u_ub[IBRAKE]  = 1.0;
 
     // brake bias
     u_def[IBRAKE_BIAS] = Value(_brake_bias_0);

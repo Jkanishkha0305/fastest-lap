@@ -52,7 +52,7 @@ class Chassis_car_3dof : public Chassis<Timeseries_t,FrontAxle_t, RearAxle_t, ST
     enum State { STATE_END = base_type::STATE_END };
 
     //! Control variables: throttle/brake
-    enum Controls  { ITHROTTLE = base_type::CONTROL_END, IBRAKE_BIAS, CONTROL_END };
+    enum Controls  { IBRAKE = base_type::CONTROL_END, IBRAKE_BIAS, CONTROL_END };
 
     //! Algebraic variables: the four vertical forces
     enum Algebraic { IFZFL, IFZFR, IFZRL, IFZRR, ALGEBRAIC_END };
@@ -139,8 +139,8 @@ class Chassis_car_3dof : public Chassis<Timeseries_t,FrontAxle_t, RearAxle_t, ST
         }
     }
 
-    //! Get the throttle
-    const Timeseries_t& get_throttle() const { return _throttle; }
+    //! Get the brake
+    const Timeseries_t& get_brake() const { return _brake; }
 
     //! Get the brake bias
     const Timeseries_t& get_brake_bias() const { return _brake_bias; }
@@ -217,16 +217,13 @@ class Chassis_car_3dof : public Chassis<Timeseries_t,FrontAxle_t, RearAxle_t, ST
     Timeseries_t   _roll_balance_coeff; //! [c] Coefficient in [0,1], usually 1/2, such that: Fz_fr − Fz_fl = D(Fz_fr + Fz_rr − Fz_fl − Fz_rl)
     scalar         _Fz_max_ref2;        //! [c] Square of the parasitic smooth positive force when Fz = 0
 
-    // Controllability properties
-    scalar  _maximum_throttle;
-
     // Variables    ----------------------------------------------------------------
 
     // Setteable variables
     Timeseries_t _brake_bias_0; //! [in] Initial value for the brake bias (to be read from database)
 
     // Control variables
-    Timeseries_t _throttle = 0.0;     //! [in] throttle: 1-full throttle, -1-hard brake
+    Timeseries_t _brake = 0.0;        //! [in] brake percentage
     Timeseries_t _brake_bias = 0.0;   //! [in] Brake bias: 1-only front, 0-only rear
 
     // Algebraic variables
@@ -262,7 +259,6 @@ class Chassis_car_3dof : public Chassis<Timeseries_t,FrontAxle_t, RearAxle_t, ST
         { "brake_bias", _brake_bias_0 },
         { "roll_balance_coefficient", _roll_balance_coeff},
         { "Fz_max_ref2", _Fz_max_ref2 },
-        { "maximum_throttle", _maximum_throttle }
     );  
 
     std::unordered_map<std::string,Timeseries_t> get_outputs_map_self() const
